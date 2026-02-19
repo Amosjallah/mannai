@@ -27,7 +27,10 @@ export default async function PageDetail({ params }: { params: Promise<{ id: str
         .eq('page_id', id)
         .order('order_index', { ascending: true })
 
-    const updatePageWithId = updatePage.bind(null, id)
+    async function handleUpdate(formData: FormData): Promise<void> {
+        'use server'
+        await updatePage(id, formData)
+    }
 
     async function handleDelete(): Promise<void> {
         'use server'
@@ -63,7 +66,7 @@ export default async function PageDetail({ params }: { params: Promise<{ id: str
                             <CardTitle>Page Metadata</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <form action={updatePageWithId} className="space-y-4">
+                            <form action={handleUpdate} className="space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Title</label>
                                     <input
