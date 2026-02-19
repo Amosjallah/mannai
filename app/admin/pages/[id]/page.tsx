@@ -6,9 +6,10 @@ import SectionEditor from './section-editor'
 import { ArrowLeft, Save, Trash } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function PageDetail({ params }: { params: { id: string } }) {
+export default async function PageDetail({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient()
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
 
     const { data: page } = await supabase
         .from('pages')
@@ -27,7 +28,11 @@ export default async function PageDetail({ params }: { params: { id: string } })
         .order('order_index', { ascending: true })
 
     const updatePageWithId = updatePage.bind(null, id)
-    const deletePageWithId = deletePage.bind(null, id)
+
+    async function handleDelete(): Promise<void> {
+        'use server'
+        await deletePage(id)
+    }
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -38,7 +43,7 @@ export default async function PageDetail({ params }: { params: { id: string } })
                     </Link>
                     <h1 className="text-3xl font-bold text-gray-900">Edit Page: {page.title}</h1>
                 </div>
-                <form action={deletePageWithId}>
+                <form action={handleDelete}>
                     <button className="text-red-600 hover:bg-red-50 px-4 py-2 rounded flex items-center">
                         <Trash className="h-4 w-4 mr-2" /> Delete Page
                     </button>
