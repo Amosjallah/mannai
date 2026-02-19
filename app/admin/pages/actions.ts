@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export async function createPage(formData: FormData) {
+export async function createPage(formData: FormData): Promise<void> {
     const supabase = await createClient()
 
     const title = formData.get('title') as string
@@ -21,14 +21,15 @@ export async function createPage(formData: FormData) {
     })
 
     if (error) {
-        return { message: 'Failed to create page' }
+        console.error('Failed to create page:', error)
+        return
     }
 
     revalidatePath('/admin/pages')
     redirect('/admin/pages')
 }
 
-export async function updatePage(id: number, formData: FormData) {
+export async function updatePage(id: number, formData: FormData): Promise<void> {
     const supabase = await createClient()
 
     const title = formData.get('title') as string
@@ -48,34 +49,34 @@ export async function updatePage(id: number, formData: FormData) {
         .eq('id', id)
 
     if (error) {
-        return { message: 'Failed to update page' }
+        console.error('Failed to update page:', error)
+        return
     }
 
     revalidatePath(`/admin/pages/${id}`)
     revalidatePath('/admin/pages')
 }
 
-export async function deletePage(id: number) {
+export async function deletePage(id: number): Promise<void> {
     const supabase = await createClient()
 
     const { error } = await supabase.from('pages').delete().eq('id', id)
 
     if (error) {
-        return { message: 'Failed to delete page' }
+        console.error('Failed to delete page:', error)
+        return
     }
 
     revalidatePath('/admin/pages')
     redirect('/admin/pages')
 }
 
-export async function addSection(pageId: number, formData: FormData) {
+export async function addSection(pageId: number, formData: FormData): Promise<void> {
     const supabase = await createClient()
 
     const section_type = formData.get('section_type') as string
-    // Default content based on type could be handled here or in the UI
     const content = JSON.parse((formData.get('content') as string) || '{}')
 
-    // Get max order index
     const { data: sections } = await supabase
         .from('page_sections')
         .select('order_index')
@@ -94,14 +95,14 @@ export async function addSection(pageId: number, formData: FormData) {
     })
 
     if (error) {
-        console.error(error)
-        return { message: 'Failed to add section' }
+        console.error('Failed to add section:', error)
+        return
     }
 
     revalidatePath(`/admin/pages/${pageId}`)
 }
 
-export async function updateSection(sectionId: number, formData: FormData) {
+export async function updateSection(sectionId: number, formData: FormData): Promise<void> {
     const supabase = await createClient()
 
     const contentStr = formData.get('content') as string
@@ -111,8 +112,8 @@ export async function updateSection(sectionId: number, formData: FormData) {
     try {
         content = JSON.parse(contentStr)
     } catch (e) {
-        console.error("Invalid JSON", e)
-        return { message: 'Invalid JSON content' }
+        console.error('Invalid JSON content', e)
+        return
     }
 
     const { error } = await supabase
@@ -125,21 +126,18 @@ export async function updateSection(sectionId: number, formData: FormData) {
         .eq('id', sectionId)
 
     if (error) {
-        return { message: 'Failed to update section' }
+        console.error('Failed to update section:', error)
     }
-
-    // We need to know the page_id to revalidate, but for now we rely on the component using this to trigger a refresh
-    // Or we can fetch it (extra query)
-    // revalidatePath(`/admin/pages/[id]`) 
 }
 
-export async function deleteSection(sectionId: number, pageId: number) {
+export async function deleteSection(sectionId: number, pageId: number): Promise<void> {
     const supabase = await createClient()
 
     const { error } = await supabase.from('page_sections').delete().eq('id', sectionId)
 
     if (error) {
-        return { message: 'Failed to delete section' }
+        console.error('Failed to delete section:', error)
+        return
     }
 
     revalidatePath(`/admin/pages/${pageId}`)

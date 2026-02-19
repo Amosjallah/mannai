@@ -27,15 +27,8 @@ export default async function PageDetail({ params }: { params: Promise<{ id: str
         .eq('page_id', id)
         .order('order_index', { ascending: true })
 
-    async function handleUpdate(formData: FormData): Promise<void> {
-        'use server'
-        await updatePage(id, formData)
-    }
-
-    async function handleDelete(): Promise<void> {
-        'use server'
-        await deletePage(id)
-    }
+    const updatePageWithId = updatePage.bind(null, id)
+    const deletePageWithId = deletePage.bind(null, id)
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -46,7 +39,7 @@ export default async function PageDetail({ params }: { params: Promise<{ id: str
                     </Link>
                     <h1 className="text-3xl font-bold text-gray-900">Edit Page: {page.title}</h1>
                 </div>
-                <form action={handleDelete}>
+                <form action={deletePageWithId}>
                     <button className="text-red-600 hover:bg-red-50 px-4 py-2 rounded flex items-center">
                         <Trash className="h-4 w-4 mr-2" /> Delete Page
                     </button>
@@ -66,7 +59,7 @@ export default async function PageDetail({ params }: { params: Promise<{ id: str
                             <CardTitle>Page Metadata</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <form action={handleUpdate} className="space-y-4">
+                            <form action={updatePageWithId} className="space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Title</label>
                                     <input
